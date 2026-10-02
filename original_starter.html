@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MineSafe AI (Original Starter)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 40px 20px;
+      background: #f6f7f7; color: #17242b;
+      font-family: Arial, sans-serif;
+    }
+    main { max-width: 900px; margin: auto; }
+    header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 35px;
+    }
+    .logo { font-size: 22px; font-weight: bold; }
+    .orange { color: #e85f22; }
+    .tag { color: #6b777c; font-size: 13px; }
+
+    h1 { margin: 8px 0; font-size: 42px; }
+    h2 { margin: 0; font-size: 19px; }
+    p { color: #66757c; line-height: 1.5; }
+    .label {
+      color: #e85f22; font-size: 11px;
+      letter-spacing: 1px; font-weight: bold;
+    }
+
+    .grid {
+      display: grid; grid-template-columns: 1.2fr .8fr;
+      gap: 18px; margin-top: 25px;
+    }
+    .card {
+      background: white; border: 1px solid #e2e7e7;
+      border-radius: 10px; padding: 22px;
+    }
+    textarea {
+      width: 100%; height: 155px; margin: 15px 0 12px;
+      padding: 12px; border: 1px solid #cbd5d6;
+      border-radius: 6px; resize: vertical;
+      font: 14px Arial;
+    }
+    button {
+      background: #e85f22; color: white; border: 0;
+      border-radius: 6px; padding: 12px 16px;
+      font-weight: bold; cursor: pointer;
+    }
+    button:hover { background: #c94b18; }
+
+    .score { font-size: 38px; font-weight: bold; margin: 12px 0 0; }
+    .score small { font-size: 13px; color: #77858a; }
+    .pill {
+      display: inline-block; padding: 5px 9px;
+      border-radius: 99px; font-size: 11px; font-weight: bold;
+    }
+    .critical { background: #fde7e7; color: #a51d22; }
+    .high { background: #ffebdf; color: #a84414; }
+    .medium { background: #fff4d8; color: #815e0b; }
+    .low { background: #e1f4ed; color: #17634d; }
+
+    ul { padding-left: 18px; font-size: 13px; line-height: 1.8; }
+    mark { background: #ffe2d1; color: #943711; }
+    .queue { margin-top: 18px; }
+    .report {
+      display: flex; justify-content: space-between;
+      gap: 12px; padding: 13px 0;
+      border-bottom: 1px solid #edf0f0; font-size: 14px;
+    }
+    .report:last-child { border: 0; }
+    .report small { display: block; color: #78858a; margin-top: 3px; }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 32px; }
+      .tag { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="logo"><span class="orange">◆</span> MineSafe <span class="orange">AI</span></div>
+      <div class="tag">Mining safety-risk detector</div>
+    </header>
+
+    <div class="label">SAFETY INTELLIGENCE</div>
+    <h1>Find risks before they become incidents.</h1>
+    <p>Analyze mining safety reports to identify hazards, prioritize risk, and recommend immediate action.</p>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Analyze a safety report</h2>
+        <textarea id="report" placeholder="Example: Strong gas smell near the underground drilling area. Ventilation is not working and workers are not wearing respirators."></textarea>
+        <button onclick="analyze()">Analyze risk</button>
+      </div>
+
+      <div class="card" id="result">
+        <div class="label">ANALYSIS RESULT</div>
+        <h2 style="margin-top: 12px">Ready to assess</h2>
+        <p>Enter a safety report to see hazards, risk score, and recommended action.</p>
+      </div>
+    </section>
+
+    <section class="card queue">
+      <div class="label">PRIORITY QUEUE</div>
+      <h2 style="margin-top: 8px">Reports needing attention</h2>
+
+      <div class="report">
+        <div><b>Gas odour near drilling bay</b><small>North Shaft · Gas leak</small></div>
+        <span class="pill critical">96 · CRITICAL</span>
+      </div>
+      <div class="report">
+        <div><b>Unprotected edge at loading area</b><small>East Pit · Fall risk</small></div>
+        <span class="pill critical">88 · CRITICAL</span>
+      </div>
+      <div class="report">
+        <div><b>Damaged electrical cable</b><small>Processing Plant · Electrical hazard</small></div>
+        <span class="pill high">84 · HIGH</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const rules = [
+      {
+        name: "Gas leak",
+        words: ["gas", "smell", "methane", "fumes", "ventilation"],
+        score: 40,
+        action: "Evacuate the area, test air quality, and inspect ventilation."
+      },
+      {
+        name: "Fall risk",
+        words: ["fall", "edge", "ladder", "slip", "unprotected"],
+        score: 28,
+        action: "Secure the area and add fall protection before work resumes."
+      },
+      {
+        name: "Missing PPE",
+        words: ["not wearing", "without ppe", "without respirator", "no helmet"],
+        score: 20,
+        action: "Pause work and supply the required PPE."
+      },
+      {
+        name: "Electrical hazard",
+        words: ["electrical", "cable", "wire", "spark", "shock"],
+        score: 31,
+        action: "Isolate power and arrange an electrical inspection."
+      }
+    ];
+
+    function analyze() {
+      const text = document.getElementById("report").value.trim();
+
+      if (!text) {
+        document.getElementById("report").focus();
+        return;
+      }
+
+      const lowerText = text.toLowerCase();
+
+      const hazards = rules
+        .map(rule => ({
+          ...rule,
+          foundWords: rule.words.filter(word => lowerText.includes(word))
+        }))
+        .filter(rule => rule.foundWords.length > 0);
+
+      let score = 12 + hazards.reduce((total, hazard) => total + hazard.score, 0);
+      score = Math.min(score, 99);
+
+      let level = "low";
+      if (score >= 85) level = "critical";
+      else if (score >= 65) level = "high";
+      else if (score >= 40) level = "medium";
+
+      const hazardList = hazards.length
+        ? hazards.map(h => `<li><b>${h.name}:</b> ${h.foundWords.map(word => `<mark>${word}</mark>`).join(", ")}</li>`).join("")
+        : "<li>No specific hazards detected. Manual review recommended.</li>";
+
+      const action = hazards[0]
+        ? hazards[0].action
+        : "Send this report for manual safety review.";
+
+      document.getElementById("result").innerHTML = `
+        <div class="label">ANALYSIS RESULT</div>
+        <div style="margin-top: 12px">
+          <span class="pill ${level}">${level.toUpperCase()}</span>
+        </div>
+        <div class="score">${score}<small> / 100</small></div>
+        <p>${hazards.map(h => h.name).join(" · ") || "Manual review recommended"}</p>
+        <ul>${hazardList}</ul>
+        <p><b>Recommended action:</b><br>${action}</p>
+      `;
+    }
+  </script>
+</body>
+</html>

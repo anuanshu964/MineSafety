@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React Bits · Aurora Background Demo</title>
+  <link rel="stylesheet" href="components/ui/Aurora.css" />
+  <style>
+    :root {
+      --bg: #040711;
+      --card-bg: rgba(15, 23, 42, 0.65);
+      --card-border: rgba(255, 255, 255, 0.14);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #5227FF;
+      --accent-glow: rgba(82, 39, 255, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Aurora Canvas Layer behind all content */
+    #aurora-root {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Top navigation overlay */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 32px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(3, 7, 18, 0.55);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-tag {
+      background: linear-gradient(135deg, #7cff67, #5227FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.2s ease;
+    }
+
+    .btn-link:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Main Hero Overlay */
+    .hero-container {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+      margin: 60px auto 40px;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124, 255, 103, 0.12);
+      border: 1px solid rgba(124, 255, 103, 0.35);
+      color: #7cff67;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7cff67;
+      box-shadow: 0 0 10px #7cff67;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 17px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 32px;
+    }
+
+    /* Interactive Control Panel Card */
+    .control-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      text-align: left;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      margin-bottom: 40px;
+    }
+
+    .control-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .control-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .presets-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .btn-preset {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-preset:hover, .btn-preset.active {
+      background: rgba(82, 39, 255, 0.25);
+      border-color: #5227FF;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(82, 39, 255, 0.3);
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .control-value {
+      color: #7cff67;
+      font-family: monospace;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #7cff67;
+      cursor: pointer;
+      box-shadow: 0 0 10px #7cff67;
+    }
+
+    /* Integration Code Snippet Card */
+    .code-card {
+      background: rgba(3, 7, 18, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      overflow-x: auto;
+      margin-bottom: 50px;
+    }
+
+    .code-header {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .code-accent { color: #7cff67; }
+    .code-prop { color: #B497CF; }
+    .code-str { color: #38bdf8; }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 32px; }
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Aurora Full Screen Canvas Container -->
+  <div id="aurora-root"></div>
+
+  <!-- Header Navigation -->
+  <header class="topbar">
+    <div class="brand">
+      <span>MineSafe</span>
+      <span style="opacity: 0.3">|</span>
+      <span class="brand-tag">React Bits · Aurora</span>
+    </div>
+    <div class="nav-actions">
+      <a class="btn-link" href="index.html">← Dashboard</a>
+      <a class="btn-link" href="scroll_reveal.html" style="color: #38bdf8;">ScrollReveal ⚡</a>
+      <a class="btn-link" href="https://reactbits.dev" target="_blank" rel="noopener">React Bits Docs ↗</a>
+    </div>
+  </header>
+
+  <!-- Hero & Controls Section -->
+  <main class="hero-container">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      WebGL 2.0 Shader Background
+    </div>
+
+    <h1>Ambient Aurora Canvas</h1>
+    <p class="subtitle">
+      Powered by React Bits and OGL. Real-time procedural simplex noise waves with multi-stop GPU gradient blending.
+    </p>
+
+    <!-- Interactive Customizer Controls -->
+    <div class="control-card">
+      <div class="control-card-header">
+        <span class="control-title">Active Shader Parameters</span>
+        <span style="font-size: 12px; color: var(--text-muted)">Interactive React Props</span>
+      </div>
+
+      <!-- Presets -->
+      <div class="presets-row" id="presets-row">
+        <button class="btn-preset active" data-preset="default">
+          <span class="swatch" style="background: linear-gradient(135deg, #7cff67, #5227FF)"></span>
+          Neon Aurora (Default)
+        </button>
+        <button class="btn-preset" data-preset="emerald">
+          <span class="swatch" style="background: linear-gradient(135deg, #059669, #34d399)"></span>
+          Deep Emerald
+        </button>
+        <button class="btn-preset" data-preset="crimson">
+          <span class="swatch" style="background: linear-gradient(135deg, #b8473e, #f59e0b)"></span>
+          Safety Siren / Crimson
+        </button>
+        <button class="btn-preset" data-preset="cosmic">
+          <span class="swatch" style="background: linear-gradient(135deg, #3A29FF, #FF94B4)"></span>
+          Cosmic Violet
+        </button>
+      </div>
+
+      <!-- Sliders Grid -->
+      <div class="controls-grid">
+        <div class="control-item">
+          <div class="control-label">
+            <span>Speed</span>
+            <span class="control-value" id="val-speed">0.5</span>
+          </div>
+          <input type="range" id="input-speed" min="0.1" max="2.5" step="0.1" value="0.5" />
+        </div>
+
+        <div class="control-item">
+          <div class="control-label">
+            <span>Amplitude</span>
+            <span class="control-value" id="val-amplitude">1.0</span>
+          </div>
+          <input type="range" id="input-amplitude" min="0.2" max="2.5" step="0.1" value="1.0" />
+        </div>
+
+        <div class="control-item">
+          <div class="control-label">
+            <span>Blend Intensity</span>
+            <span class="control-value" id="val-blend">0.5</span>
+          </div>
+          <input type="range" id="input-blend" min="0.1" max="1.0" step="0.05" value="0.5" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage Code Block -->
+    <div class="code-card">
+      <div class="code-header">
+        <span>Component Import & Usage</span>
+        <span>components/ui/Aurora.jsx</span>
+      </div>
+      <code>
+        import <span class="code-accent">Aurora</span> from <span class="code-str">'@/components/ui/Aurora'</span>;<br /><br />
+        &lt;<span class="code-accent">Aurora</span><br />
+        &nbsp;&nbsp;<span class="code-prop">colorStops</span>={<span class="code-str" id="code-stops">["#7cff67", "#B497CF", "#5227FF"]</span>}<br />
+        &nbsp;&nbsp;<span class="code-prop">blend</span>={<span class="code-str" id="code-blend">0.5</span>}<br />
+        &nbsp;&nbsp;<span class="code-prop">amplitude</span>={<span class="code-str" id="code-amplitude">1.0</span>}<br />
+        &nbsp;&nbsp;<span class="code-prop">speed</span>={<span class="code-str" id="code-speed">0.5</span>}<br />
+        /&gt;
+      </code>
+    </div>
+  </main>
+
+  <!-- ES Module Script to Initialize WebGL Aurora with OGL -->
+  <script type="module">
+    import { Renderer, Program, Mesh, Color, Triangle } from 'https://esm.sh/ogl@1.0.11';
+
+    const VERT = `#version 300 es
+in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+    const FRAG = `#version 300 es
+precision highp float;
+
+uniform float uTime;
+uniform float uAmplitude;
+uniform vec3 uColorStops[3];
+uniform vec2 uResolution;
+uniform float uBlend;
+uniform float uLightMode;
+
+out vec4 fragColor;
+
+vec3 permute(vec3 x) {
+  return mod(((x * 34.0) + 1.0) * x, 289.0);
+}
+
+float snoise(vec2 v){
+  const vec4 C = vec4(
+      0.211324865405187, 0.366025403784439,
+      -0.577350269189626, 0.024390243902439
+  );
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+
+  vec3 p = permute(
+      permute(i.y + vec3(0.0, i1.y, 1.0))
+    + i.x + vec3(0.0, i1.x, 1.0)
+  );
+
+  vec3 m = max(
+      0.5 - vec3(
+          dot(x0, x0),
+          dot(x12.xy, x12.xy),
+          dot(x12.zw, x12.zw)
+      ), 
+      0.0
+  );
+  m = m * m;
+  m = m * m;
+
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+struct ColorStop {
+  vec3 color;
+  float position;
+};
+
+#define COLOR_RAMP(colors, factor, finalColor) {              \
+  int index = 0;                                            \
+  for (int i = 0; i < 2; i++) {                               \
+     ColorStop currentColor = colors[i];                    \
+     bool isInBetween = currentColor.position <= factor;    \
+     index = int(mix(float(index), float(i), float(isInBetween))); \
+  }                                                         \
+  ColorStop currentColor = colors[index];                   \
+  ColorStop nextColor = colors[index + 1];                  \
+  float range = nextColor.position - currentColor.position; \
+  float lerpFactor = (factor - currentColor.position) / range; \
+  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  
+  ColorStop colors[3];
+  colors[0] = ColorStop(uColorStops[0], 0.0);
+  colors[1] = ColorStop(uColorStops[1], 0.5);
+  colors[2] = ColorStop(uColorStops[2], 1.0);
+  
+  vec3 rampColor;
+  COLOR_RAMP(colors, uv.x, rampColor);
+  
+  float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
+  height = exp(height);
+  height = (uv.y * 2.0 - height + 0.2);
+  float intensity = 0.6 * height;
+  
+  float midPoint = 0.20;
+  float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
+  
+  vec3 auroraColor = intensity * rampColor;
+  
+  if (uLightMode > 0.5) {
+    float energy = clamp(max(intensity, 0.0), 0.0, 1.0);
+    float coverage = clamp(auroraAlpha * (0.55 + 0.45 * energy), 0.0, 0.86);
+    vec3 chroma = pow(clamp(rampColor, 0.0, 1.0), vec3(1.2));
+    float chromaPeak = max(chroma.r, max(chroma.g, chroma.b));
+    chroma /= max(chromaPeak, 0.0001);
+    fragColor = vec4(mix(vec3(1.0), chroma, min(coverage * 1.08, 0.94)), 1.0);
+  } else {
+    fragColor = vec4(auroraColor * auroraAlpha, auroraAlpha);
+  }
+}
+`;
+
+    // Presets definition
+    const PRESETS = {
+      default: ["#7cff67", "#B497CF", "#5227FF"],
+      emerald: ["#059669", "#10b981", "#34d399"],
+      crimson: ["#b8473e", "#f59e0b", "#96372e"],
+      cosmic: ["#3A29FF", "#FF94B4", "#FF3232"]
+    };
+
+    let state = {
+      colorStops: [...PRESETS.default],
+      speed: 0.5,
+      amplitude: 1.0,
+      blend: 0.5,
+      lightMode: false
+    };
+
+    const container = document.getElementById('aurora-root');
+    const renderer = new Renderer({
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: true
+    });
+    const gl = renderer.gl;
+    gl.clearColor(0, 0, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.canvas.style.backgroundColor = 'transparent';
+
+    function parseColorStops(hexArray) {
+      return hexArray.map(hex => {
+        const c = new Color(hex);
+        return [c.r, c.g, c.b];
+      });
+    }
+
+    const geometry = new Triangle(gl);
+    if (geometry.attributes.uv) delete geometry.attributes.uv;
+
+    const program = new Program(gl, {
+      vertex: VERT,
+      fragment: FRAG,
+      uniforms: {
+        uTime: { value: 0 },
+        uAmplitude: { value: state.amplitude },
+        uColorStops: { value: parseColorStops(state.colorStops) },
+        uResolution: { value: [window.innerWidth, window.innerHeight] },
+        uBlend: { value: state.blend },
+        uLightMode: { value: 0 }
+      }
+    });
+
+    const mesh = new Mesh(gl, { geometry, program });
+    container.appendChild(gl.canvas);
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      renderer.setSize(width, height);
+      program.uniforms.uResolution.value = [width, height];
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let animId;
+    let startTime = performance.now();
+    function animate(t) {
+      animId = requestAnimationFrame(animate);
+      const elapsed = (t - startTime) * 0.001;
+      program.uniforms.uTime.value = elapsed * state.speed * 0.8;
+      program.uniforms.uAmplitude.value = state.amplitude;
+      program.uniforms.uBlend.value = state.blend;
+      program.uniforms.uLightMode.value = state.lightMode ? 1 : 0;
+      program.uniforms.uColorStops.value = parseColorStops(state.colorStops);
+      renderer.render({ scene: mesh });
+    }
+    animate(startTime);
+
+    // Interactive UI Handlers
+    const speedInput = document.getElementById('input-speed');
+    const ampInput = document.getElementById('input-amplitude');
+    const blendInput = document.getElementById('input-blend');
+
+    const valSpeed = document.getElementById('val-speed');
+    const valAmp = document.getElementById('val-amplitude');
+    const valBlend = document.getElementById('val-blend');
+
+    const codeSpeed = document.getElementById('code-speed');
+    const codeAmp = document.getElementById('code-amplitude');
+    const codeBlend = document.getElementById('code-blend');
+    const codeStops = document.getElementById('code-stops');
+
+    speedInput.addEventListener('input', (e) => {
+      state.speed = parseFloat(e.target.value);
+      valSpeed.textContent = state.speed.toFixed(1);
+      codeSpeed.textContent = state.speed.toFixed(1);
+    });
+
+    ampInput.addEventListener('input', (e) => {
+      state.amplitude = parseFloat(e.target.value);
+      valAmp.textContent = state.amplitude.toFixed(1);
+      codeAmp.textContent = state.amplitude.toFixed(1);
+    });
+
+    blendInput.addEventListener('input', (e) => {
+      state.blend = parseFloat(e.target.value);
+      valBlend.textContent = state.blend.toFixed(2);
+      codeBlend.textContent = state.blend.toFixed(2);
+    });
+
+    // Preset buttons
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const key = btn.dataset.preset;
+        if (PRESETS[key]) {
+          state.colorStops = [...PRESETS[key]];
+          codeStops.textContent = JSON.stringify(state.colorStops);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

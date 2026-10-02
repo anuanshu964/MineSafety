@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MineSafe | Safety Review</title>
+  <style>
+    :root {
+      --navy: #17324d;
+      --blue: #2f6690;
+      --amber: #c67a16;
+      --red: #b8473e;
+      --green: #33745e;
+      --text: #1e2b32;
+      --muted: #687780;
+      --line: #d9e0e3;
+      --page: #f4f6f7;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font: 14px/1.5 Arial, sans-serif;
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--navy);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 32px;
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .brand span { color: #f1b24d; }
+
+    .topbar nav {
+      display: flex;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .topbar nav a {
+      color: #cbd8e2;
+      text-decoration: none;
+      padding-top: 21px;
+      border-bottom: 3px solid transparent;
+      font-size: 13px;
+    }
+
+    .topbar nav a.active {
+      color: white;
+      border-bottom-color: #f1b24d;
+    }
+
+    .user {
+      margin-left: auto;
+      color: #cbd8e2;
+      font-size: 13px;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: auto;
+      padding: 32px;
+    }
+
+    .page-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: 28px;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .page-heading p,
+    .muted {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .status {
+      color: var(--green);
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .status::before {
+      content: "●";
+      margin-right: 6px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .metric, .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+    }
+
+    .metric {
+      padding: 18px;
+      border-left: 4px solid var(--blue);
+    }
+
+    .metric.warning { border-left-color: var(--amber); }
+    .metric.danger { border-left-color: var(--red); }
+    .metric.success { border-left-color: var(--green); }
+
+    .metric p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 30px;
+      margin-top: 5px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .card-header {
+      padding: 17px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-body { padding: 20px; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    select, textarea {
+      width: 100%;
+      border: 1px solid #bdc9cf;
+      border-radius: 4px;
+      background: white;
+      padding: 10px;
+      font: inherit;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 4px;
+      background: var(--navy);
+      color: white;
+      padding: 11px 16px;
+      margin-top: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover { background: #244b70; }
+
+    .empty {
+      padding: 40px 10px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .critical { background: #f8e3e1; color: #96372e; }
+    .high { background: #fbefd9; color: #94610f; }
+    .medium { background: #e6eff5; color: #2f6690; }
+    .low { background: #e2f0ea; color: #276249; }
+
+    .score {
+      font-size: 34px;
+      font-weight: bold;
+      margin: 12px 0 0;
+    }
+
+    .score small { font-size: 13px; color: var(--muted); }
+
+    .risk-list {
+      padding-left: 18px;
+      font-size: 13px;
+      color: #4e5d65;
+    }
+
+    .action-box {
+      background: #f0f5f7;
+      border-left: 3px solid var(--blue);
+      padding: 12px;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    th {
+      background: #f7f9fa;
+      color: #64757e;
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: .4px;
+      padding: 12px 16px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .report-name {
+      display: block;
+      font-weight: bold;
+    }
+
+    .report-id {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 800px) {
+      .topbar { padding: 0 18px; }
+      .topbar nav, .user { display: none; }
+      main { padding: 22px 16px; }
+      .summary, .workspace { grid-template-columns: 1fr; }
+      .page-heading { display: block; }
+      .status { margin-top: 12px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">Mine<span>Safe</span></div>
+    <nav>
+      <a class="active" href="#">Safety Review</a>
+      <a href="#">Reports</a>
+      <a href="#">Actions</a>
+      <a href="#">Settings</a>
+    </nav>
+    <div class="user">Safety Team · North Shaft</div>
+  </header>
+
+  <main>
+    <section class="page-heading">
+      <div>
+        <h1>Safety Review</h1>
+        <p>Review reported hazards and prioritise corrective action.</p>
+      </div>
+      <div class="status">System operational</div>
+    </section>
+
+    <section class="summary">
+      <div class="metric">
+        <p>Reports received</p>
+        <strong>24</strong>
+      </div>
+      <div class="metric danger">
+        <p>Critical risks</p>
+        <strong>3</strong>
+      </div>
+      <div class="metric warning">
+        <p>High risks</p>
+        <strong>6</strong>
+      </div>
+      <div class="metric success">
+        <p>Resolved</p>
+        <strong>15</strong>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="card">
+        <div class="card-header">
+          <h2>Submit report for assessment</h2>
+        </div>
+        <div class="card-body">
+          <label for="location">Location / work area</label>
+          <select id="location">
+            <option>North Shaft · Drilling Bay 4</option>
+            <option>East Pit · Loading Area</option>
+            <option>Processing Plant</option>
+            <option>South Ramp</option>
+          </select>
+
+          <label for="report" style="margin-top:16px">Safety report</label>
+          <textarea id="report" placeholder="Describe the observed condition, hazard, people involved, and immediate concern."></textarea>
+
+          <button onclick="assessReport()">Assess report</button>
+        </div>
+      </div>
+
+      <aside class="card">
+        <div class="card-header">
+          <h2>Assessment result</h2>
+        </div>
+        <div class="card-body" id="result">
+          <div class="empty">
+            <strong>No assessment yet</strong>
+            <p>Submit a safety report to view the risk assessment.</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Priority reports</h2>
+        <span class="muted">Sorted by risk score</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>REPORT</th>
+              <th>LOCATION</th>
+              <th>HAZARD</th>
+              <th>RISK SCORE</th>
+              <th>SEVERITY</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="report-name">Gas odour near drilling bay</span><span class="report-id">MS-2048</span></td>
+              <td>North Shaft</td>
+              <td>Gas leak</td>
+              <td><b>96 / 100</b></td>
+              <td><span class="badge critical">CRITICAL</span></td>
+              <td>Assigned</td>
+            </tr>
+            <tr>
+              <td><span class="report-name">Unprotected edge at loading area</span><span class="report-id">MS-2047</span></td>
+              <td>East Pit</td>
+              <td>Fall risk</td>
+              <td><b>88 / 100</b></td>
+              <td><span class="badge critical">CRITICAL</span></td>
+              <td>Under review</td>
+            </tr>
+            <tr>
+              <td><span class="report-name">Damaged electrical cable</span><span class="report-id">MS-2046</span></td>
+              <td>Processing Plant</td>
+              <td>Electrical hazard</td>
+              <td><b>84 / 100</b></td>
+              <td><span class="badge high">HIGH</span></td>
+              <td>Assigned</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const rules = [
+      {
+        type: "Gas leak",
+        words: ["gas", "smell", "methane", "fumes", "ventilation"],
+        points: 40,
+        action: "Evacuate the work area, test the atmosphere, and inspect ventilation equipment."
+      },
+      {
+        type: "Fall risk",
+        words: ["fall", "edge", "ladder", "slip", "unprotected"],
+        points: 28,
+        action: "Secure the area and install appropriate fall protection before work resumes."
+      },
+      {
+        type: "Missing PPE",
+        words: ["not wearing", "without ppe", "without respirator", "no helmet"],
+        points: 20,
+        action: "Stop work and ensure all required personal protective equipment is available."
+      },
+      {
+        type: "Electrical hazard",
+        words: ["electrical", "cable", "wire", "spark", "shock"],
+        points: 31,
+        action: "Isolate the equipment and request inspection by a qualified electrician."
+      }
+    ];
+
+    function assessReport() {
+      const report = document.getElementById("report").value.trim();
+
+      if (!report) {
+        document.getElementById("report").focus();
+        return;
+      }
+
+      const text = report.toLowerCase();
+
+      const matches = rules
+        .map(rule => ({
+          ...rule,
+          hits: rule.words.filter(word => text.includes(word))
+        }))
+        .filter(rule => rule.hits.length > 0);
+
+      const score = Math.min(
+        99,
+        12 + matches.reduce((total, rule) => total + rule.points, 0)
+      );
+
+      let severity = "low";
+      if (score >= 85) severity = "critical";
+      else if (score >= 65) severity = "high";
+      else if (score >= 40) severity = "medium";
+
+      const action = matches[0]
+        ? matches[0].action
+        : "Send this report to the safety supervisor for manual assessment.";
+
+      document.getElementById("result").innerHTML = `
+        <span class="badge ${severity}">${severity.toUpperCase()}</span>
+        <div class="score">${score}<small> / 100</small></div>
+        <p><b>Detected hazards:</b> ${
+          matches.length ? matches.map(item => item.type).join(", ") : "No specific hazard identified"
+        }</p>
+        <ul class="risk-list">
+          ${
+            matches.length
+              ? matches.map(item => `<li><b>${item.type}:</b> ${item.hits.join(", ")}</li>`).join("")
+              : "<li>Manual review is recommended.</li>"
+          }
+        </ul>
+        <div class="action-box">
+          <b>Recommended action</b><br>
+          ${action}
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

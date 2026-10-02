@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MineSafe · Safety Review & Operations Control</title>
+  <meta name="description" content="MineSafe mining safety review and incident prioritisation system for underground and open pit operations." />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Critical Emergency Alert Banner (Fixed at Top) -->
+  <div id="critical-alert-banner" class="alert-banner hidden" role="alert" aria-live="assertive">
+    <div class="alert-container">
+      <div class="alert-message-group">
+        <span class="alert-tag">EMERGENCY ALARM</span>
+        <span class="alert-text">CRITICAL SAFETY RISK DETECTED — IMMEDIATE ACTION REQUIRED.</span>
+      </div>
+      <div class="alert-controls">
+        <button id="btn-banner-mute" class="btn-alert-mute" onclick="muteSiren()">Mute Siren</button>
+        <button class="btn-alert-action" onclick="jumpToAssessment()">View Assessment</button>
+        <button class="btn-alert-ack" onclick="dismissCriticalAlert()">Acknowledge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        Mine<span>Safe</span>
+        <span class="brand-divider">|</span>
+        <span class="brand-dept">Operations Control</span>
+      </div>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a class="nav-link active" href="#review" onclick="switchNav('review')">Safety Review</a>
+        <a class="nav-link" href="#reports" onclick="switchNav('reports')">Reports</a>
+        <a class="nav-link" href="#actions" onclick="switchNav('actions')">Actions</a>
+        <a class="nav-link" href="#settings" onclick="switchNav('settings')">Settings</a>
+        <a class="nav-link" href="aurora.html" style="color: #7cff67; font-weight: 600;" title="View React Bits Aurora Ambient Background">Aurora BG ✨</a>
+        <a class="nav-link" href="scroll_reveal.html" style="color: #38bdf8; font-weight: 600;" title="View React Bits ScrollReveal Kinetic Text">ScrollReveal ⚡</a>
+      </nav>
+
+      <div class="topbar-right">
+        <!-- Emergency Siren Controls -->
+        <button id="btn-header-mute" class="btn-topbar-mute" onclick="muteSiren()" title="Stop and mute active emergency siren">
+          <span class="siren-indicator" id="siren-pulse-dot"></span>
+          <span id="mute-label">Mute Siren</span>
+        </button>
+
+        <button id="btn-test-siren" class="btn-topbar-test" onclick="testSiren()" title="Test emergency two-tone evacuation siren">
+          Test Siren
+        </button>
+
+        <div class="user-profile">
+          <span class="user-role">Safety Supervisor</span>
+          <span class="user-location">North Shaft</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Container -->
+  <main class="main-content">
+
+    <!-- Page Heading -->
+    <section class="page-heading">
+      <div>
+        <h1>Safety Review</h1>
+        <p class="muted">Review reported hazards and prioritise corrective action across active mine sectors.</p>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator"></span>
+        <span>System operational</span>
+      </div>
+    </section>
+
+    <!-- Overview Status KPI Cards -->
+    <section class="summary-cards" aria-label="Shift Summary Metrics">
+      <div class="metric-card metric-primary">
+        <div class="metric-label">Reports received</div>
+        <div class="metric-value" id="kpi-total">24</div>
+        <div class="metric-subtext">Active shift intake</div>
+      </div>
+
+      <div class="metric-card metric-danger">
+        <div class="metric-label">Critical risks</div>
+        <div class="metric-value" id="kpi-critical">3</div>
+        <div class="metric-subtext">Immediate action required</div>
+      </div>
+
+      <div class="metric-card metric-warning">
+        <div class="metric-label">High risks</div>
+        <div class="metric-value" id="kpi-high">6</div>
+        <div class="metric-subtext">Action within 30 minutes</div>
+      </div>
+
+      <div class="metric-card metric-success">
+        <div class="metric-label">Resolved</div>
+        <div class="metric-value" id="kpi-resolved">15</div>
+        <div class="metric-subtext">Cleared this shift</div>
+      </div>
+    </section>
+
+    <!-- Sample Presets Row -->
+    <div class="sample-loader-bar">
+      <span class="sample-label">Load sample report:</span>
+      <button class="btn-sample" onclick="loadSample(0)">North Shaft gas odour</button>
+      <button class="btn-sample" onclick="loadSample(1)">East Pit unprotected edge</button>
+      <button class="btn-sample" onclick="loadSample(2)">Processing Plant electrical cable</button>
+      <button class="btn-sample" onclick="loadSample(3)">South Ramp stope roof crack</button>
+      <button class="btn-sample" onclick="loadSample(4)">Crusher missing respirators</button>
+    </div>
+
+    <!-- Workspace: Report Assessment Form & Result Panel -->
+    <section class="workspace-grid" id="assessment-workspace">
+
+      <!-- Left Card: Report Assessment Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Submit report for assessment</h2>
+          <button class="btn-link" onclick="clearForm()">Clear form</button>
+        </div>
+
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="location">Location / work area</label>
+            <select id="location" class="form-control">
+              <option value="North Shaft · Drilling Bay 4">North Shaft · Drilling Bay 4</option>
+              <option value="East Pit · Loading Area">East Pit · Loading Area</option>
+              <option value="Processing Plant · Substation 3">Processing Plant · Substation 3</option>
+              <option value="South Ramp · Level 12 Stope">South Ramp · Level 12 Stope</option>
+              <option value="Conveyor Gallery 08">Conveyor Gallery 08</option>
+              <option value="Underground Workshop & Fuel Bay">Underground Workshop & Fuel Bay</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;">
+            <div class="label-row">
+              <label for="report">Safety report</label>
+              <span class="char-count" id="char-count">0 characters</span>
+            </div>
+            <textarea 
+              id="report" 
+              class="form-control form-textarea" 
+              placeholder="Describe the observed condition, hazard, people involved, equipment, and immediate concern."
+              oninput="handleReportInput()"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" onclick="assessReport(true)">Assess report</button>
+            <button class="btn-secondary" onclick="addReportToTable()">Add to priority reports</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Card: Assessment Result Panel -->
+      <aside class="panel" id="result-panel">
+        <div class="panel-header">
+          <h2>Assessment Result</h2>
+          <span id="result-badge" class="badge badge-neutral">Ready</span>
+        </div>
+
+        <div class="panel-body" id="result-content">
+          <!-- Default Empty State -->
+          <div class="empty-state" id="empty-state">
+            <strong>No assessment yet</strong>
+            <p>Submit a safety report to view the risk assessment, score, and recommended action.</p>
+          </div>
+
+          <!-- Active Assessment Result -->
+          <div class="assessment-result hidden" id="active-result">
+            <div class="result-score-header">
+              <div class="score-box">
+                <span class="score-number" id="res-score">0</span>
+                <span class="score-total">/ 100</span>
+              </div>
+              <div class="score-details">
+                <div class="score-severity-title" id="res-severity-title">Critical Risk</div>
+                <div class="score-sla" id="res-sla">Immediate review required</div>
+              </div>
+            </div>
+
+            <div class="result-section">
+              <div class="result-section-label">Detected hazards:</div>
+              <div id="res-hazards" class="hazards-list">
+                <!-- Injected via JavaScript -->
+              </div>
+            </div>
+
+            <div class="action-box">
+              <div class="action-box-header">Recommended Action</div>
+              <div class="action-box-text" id="res-action">
+                Evacuate the work area, test the atmosphere, and inspect ventilation equipment.
+              </div>
+              <ul class="action-checklist" id="res-checklist">
+                <!-- Checklist items -->
+              </ul>
+            </div>
+
+            <div class="result-footer">
+              <button class="btn-subtle" onclick="copyResultSummary()">Copy summary</button>
+              <button class="btn-danger-subtle" onclick="logImmediateIncident()">Log as Critical Incident</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- Priority Reports Data Table -->
+    <section class="panel table-panel">
+      <div class="panel-header table-header">
+        <div>
+          <h2>Priority reports</h2>
+          <p class="muted">Sorted by risk score</p>
+        </div>
+
+        <div class="table-controls">
+          <input 
+            type="text" 
+            id="table-search" 
+            class="form-control table-search-input" 
+            placeholder="Search reports or locations..." 
+            oninput="renderTable()"
+          />
+
+          <div class="filter-group">
+            <button class="btn-filter active" data-filter="all" onclick="setFilter('all')">All</button>
+            <button class="btn-filter" data-filter="critical" onclick="setFilter('critical')">Critical</button>
+            <button class="btn-filter" data-filter="high" onclick="setFilter('high')">High</button>
+            <button class="btn-filter" data-filter="medium" onclick="setFilter('medium')">Medium</button>
+            <button class="btn-filter" data-filter="low" onclick="setFilter('low')">Low</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>REPORT</th>
+              <th>LOCATION</th>
+              <th>HAZARD</th>
+              <th>RISK SCORE</th>
+              <th>SEVERITY</th>
+              <th>STATUS</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Clean Enterprise Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>MineSafe Operations Control System · Version 4.1</span>
+      <span>MSHA 30 CFR Safety Monitoring</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
