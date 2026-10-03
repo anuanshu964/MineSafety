@@ -158,10 +158,16 @@ let currentGainNode = null;
 let audioContext = null;
 
 // --- Initialization ---
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   renderTable();
   updateKPIs();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 // ============================================================================
 // Web Audio API: Industrial Two-Tone Emergency Evacuation Siren
@@ -750,4 +756,34 @@ function escapeHtml(str) {
   return str.replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
+}
+
+// Expose functions globally to window for inline HTML event handlers in Vite production bundle
+if (typeof window !== "undefined") {
+  Object.assign(window, {
+    muteSiren,
+    testSiren,
+    startEmergencySiren,
+    stopEmergencySiren,
+    dismissCriticalAlert,
+    jumpToAssessment,
+    switchNav,
+    loadSample,
+    clearForm,
+    handleReportInput,
+    assessReport,
+    addReportToTable,
+    renderTable,
+    setFilter,
+    updateReportStatus,
+    reviewReport,
+    updateKPIs,
+    copyResultSummary,
+    logImmediateIncident,
+    showToast,
+    showCriticalAlertBanner,
+    resetResultView,
+    escapeHtml,
+    initApp
+  });
 }
